@@ -93,7 +93,9 @@ export function SignIn() {
       footer={
         <div className="ja-authFooterRow">
           <div className="ja-muted ja-small">
-            New here? <Link className="ja-link" to="/signup">Create an account</Link>
+            <Link className="ja-link" to="/login">Back to login</Link>
+            {' '}
+            • New here? <Link className="ja-link" to="/signup">Create an account</Link>
           </div>
         </div>
       }
