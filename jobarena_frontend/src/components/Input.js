@@ -1,4 +1,4 @@
-import React, { useId } from 'react';
+import React, { forwardRef, useId } from 'react';
 
 /**
  * @param {{
@@ -7,7 +7,7 @@ import React, { useId } from 'react';
  *  error?: string;
  * } & React.InputHTMLAttributes<HTMLInputElement>} props
  */
-export function Input({ label, helpText, error, id, ...rest }) {
+export const Input = forwardRef(function Input({ label, helpText, error, id, ...rest }, ref) {
   const autoId = useId();
   const inputId = id || autoId;
   const helpId = helpText ? `${inputId}__help` : undefined;
@@ -19,6 +19,7 @@ export function Input({ label, helpText, error, id, ...rest }) {
         {label}
       </label>
       <input
+        ref={ref}
         className={`ja-input ${error ? 'ja-input--error' : ''}`}
         id={inputId}
         aria-invalid={Boolean(error)}
@@ -37,4 +38,4 @@ export function Input({ label, helpText, error, id, ...rest }) {
       ) : null}
     </div>
   );
-}
+});
