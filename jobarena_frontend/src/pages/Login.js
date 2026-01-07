@@ -52,7 +52,7 @@ export function Login() {
         <div className="ja-authCard__footer">
           <div className="ja-authFooterRow">
             <div className="ja-muted ja-small">
-              Looking for jobs instead? <Link className="ja-link" to="/">Go to search</Link>
+              Looking for jobs instead? <Link className="ja-link" to="/jobs">Go to search</Link>
             </div>
           </div>
         </div>

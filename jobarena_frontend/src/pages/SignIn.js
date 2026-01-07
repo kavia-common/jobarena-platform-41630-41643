@@ -77,8 +77,8 @@ export function SignIn() {
       const result = await AuthApi.signIn({ email, password, remember });
       storeToken(result.token);
 
-      // Navigate to home after success.
-      navigate('/', { replace: true });
+      // Navigate to jobs after success.
+      navigate('/jobs', { replace: true });
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Sign in failed. Please try again.');
     } finally {

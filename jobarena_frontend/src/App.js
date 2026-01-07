@@ -37,9 +37,10 @@ function useIsSmallScreen(maxWidth) {
 }
 
 /**
- * Existing home (job search) view extracted as a component so we can route.
+ * Jobs screen extracted as a component so we can route it separately.
+ * Note: the default landing page is now /login, so jobs live at /jobs.
  */
-function Home() {
+function Jobs() {
   const { filters, setFilters, jobs, mode, status, error } = useJobsSearch();
 
   const [selectedJobId, setSelectedJobId] = useState(null);
@@ -133,7 +134,7 @@ function App() {
   function onSignOut() {
     clearToken();
     // Light-weight approach: force route-aware rerender via navigation.
-    window.location.assign('/');
+    window.location.assign('/login');
   }
 
   return (
@@ -143,16 +144,17 @@ function App() {
           <div className="ja-topbar__inner">
             <div className="ja-brand" aria-label="Jobarena">
               <div className="ja-brand__name">
-                <Link className="ja-brandLink" to="/">
+                <Link className="ja-brandLink" to="/login">
                   Jobarena
                 </Link>
               </div>
               <div className="ja-brand__tagline">Search • Filter • Apply</div>
             </div>
 
+            {/* Only show the search bar on the jobs route. */}
             <Routes>
               <Route
-                path="/"
+                path="/jobs"
                 element={
                   <SearchBar
                     query={''}
@@ -185,10 +187,18 @@ function App() {
 
         {/* Route content */}
         <Routes>
-          <Route path="/" element={<Home />} />
+          {/* Default landing page */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          {/* Auth/landing */}
           <Route path="/login" element={<Login />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+
+          {/* Job search screen */}
+          <Route path="/jobs" element={<Jobs />} />
+
+          {/* Fallback */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
