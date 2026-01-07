@@ -1,4 +1,5 @@
 import { filterMockJobs } from './mockData';
+import { API_PATHS, JOBS_QUERY_PARAMS } from './constants';
 
 /**
  * Determine the backend base URL for API calls.
@@ -23,6 +24,18 @@ function getApiBaseUrl() {
 function getApiMode() {
   const baseUrl = getApiBaseUrl();
   return { isMock: !baseUrl, baseUrl };
+}
+
+/**
+ * Ensure a URL is joined safely: base + path (path should start with '/')
+ * @param {string} baseUrl
+ * @param {string} path
+ * @returns {string}
+ */
+function joinUrl(baseUrl, path) {
+  const b = baseUrl.replace(/\/+$/, '');
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${b}${p}`;
 }
 
 /**
@@ -57,14 +70,31 @@ async function fetchJson(url, options) {
 }
 
 /**
+ * Normalize job search response payloads.
+ * Accepts either {jobs:[...]} or a bare array.
+ * @param {any} data
+ * @returns {import('../types/job').Job[]}
+ */
+function normalizeJobsResponse(data) {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.jobs)) return data.jobs;
+  return [];
+}
+
+/**
  * API surface for jobs.
  * In mock mode, returns derived results from local mock data.
  */
 export const JobsApi = {
   /**
    * Search jobs.
-   * NOTE: When a backend is available, this can be wired to:
-   * GET {baseUrl}/jobs?query=...&locations=... etc.
+   *
+   * Env wiring:
+   * - Uses REACT_APP_API_BASE (preferred) or REACT_APP_BACKEND_URL.
+   * - If neither is set, returns mock data (demo mode).
+   *
+   * Query params:
+   * - q, location, type, experience
    *
    * @param {import('../types/job').JobSearchFilters} filters
    * @returns {Promise<{jobs: import('../types/job').Job[], mode: ApiResult}>}
@@ -78,20 +108,25 @@ export const JobsApi = {
     }
 
     const params = new URLSearchParams();
-    if (filters.query) params.set('query', filters.query);
-    (filters.locations || []).forEach((l) => params.append('location', l));
-    (filters.jobTypes || []).forEach((t) => params.append('type', t));
-    (filters.experienceLevels || []).forEach((e) => params.append('experience', e));
 
-    const data = await fetchJson(`${mode.baseUrl.replace(/\/$/, '')}/jobs?${params.toString()}`);
-    // Expect data to be either {jobs:[...]} or [...]. Normalize.
-    const jobs = Array.isArray(data) ? data : data?.jobs || [];
-    return { jobs, mode };
+    // Required key: q (not "query")
+    if (filters.query) params.set(JOBS_QUERY_PARAMS.q, filters.query);
+
+    (filters.locations || []).forEach((l) => params.append(JOBS_QUERY_PARAMS.location, l));
+    (filters.jobTypes || []).forEach((t) => params.append(JOBS_QUERY_PARAMS.type, t));
+    (filters.experienceLevels || []).forEach((e) => params.append(JOBS_QUERY_PARAMS.experience, e));
+
+    const url = `${joinUrl(mode.baseUrl, API_PATHS.jobs)}?${params.toString()}`;
+    const data = await fetchJson(url);
+
+    return { jobs: normalizeJobsResponse(data), mode };
   },
 
   /**
    * Fetch a single job by id.
-   * NOTE: When a backend is available, this can be:
+   *
+   * In mock mode, searches the mock dataset.
+   * When a backend is available, this calls:
    * GET {baseUrl}/jobs/:id
    *
    * @param {string} id
@@ -111,7 +146,10 @@ export const JobsApi = {
       return { job, mode };
     }
 
-    const data = await fetchJson(`${mode.baseUrl.replace(/\/$/, '')}/jobs/${encodeURIComponent(id)}`);
+    const url = joinUrl(mode.baseUrl, `${API_PATHS.jobs}/${encodeURIComponent(id)}`);
+    const data = await fetchJson(url);
+
+    // Expect data to be either {job:{...}} or a bare object.
     const job = data?.job || data || null;
     return { job, mode };
   },
